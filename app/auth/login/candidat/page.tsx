@@ -24,7 +24,7 @@ export default function LoginPage() {
       setError("Email ou mot de passe incorrect.");
       setLoading(false);
     } else {
-      router.push("/");
+      router.push("/candidat");
       router.refresh();
     }
   }
