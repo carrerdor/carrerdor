@@ -1,6 +1,34 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      setError("Email ou mot de passe incorrect.");
+      setLoading(false);
+    } else {
+      router.push("/");
+      router.refresh();
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 w-full max-w-md">
@@ -10,12 +38,21 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm mt-1">Bon retour parmi nous</p>
         </div>
 
-        <form className="space-y-4">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 mb-4">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               placeholder="votre@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
               className="w-full border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-gold-400 transition-colors text-sm"
             />
           </div>
@@ -24,27 +61,21 @@ export default function LoginPage() {
             <input
               type="password"
               placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
               className="w-full border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-gold-400 transition-colors text-sm"
             />
           </div>
 
-          <button type="submit" className="btn-primary w-full text-center">
-            Se connecter
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary w-full text-center disabled:opacity-60"
+          >
+            {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
-          </div>
-          <div className="relative text-center text-xs text-gray-400 bg-white px-3 mx-auto w-fit">
-            ou
-          </div>
-        </div>
-
-        <button className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-          <span>🇬</span> Continuer avec Google
-        </button>
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Pas encore de compte ?{" "}
