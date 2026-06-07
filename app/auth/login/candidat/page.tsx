@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; 
 
 export default function LoginPage() {
   const router = useRouter();
