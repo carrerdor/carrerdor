@@ -1,31 +1,37 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CookieToSet = { name: string; value: string; options?: any };
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+export async function middleware(request: NextRequest) {
+  try {
+    let response = NextResponse.next({ request });
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+
+    if (!url || !key) return response;
+
+    const supabase = createServerClient(url, key, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: object }[]) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options as Parameters<typeof supabaseResponse.cookies.set>[2])
-          );
+        setAll(cookiesToSet: CookieToSet[]) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
         },
       },
-    }
-  );
+    });
 
-  await supabase.auth.getUser();
-
-  return supabaseResponse;
+    await supabase.auth.getUser();
+    return response;
+  } catch {
+    return NextResponse.next({ request });
+  }
 }
 
 export const config = {
